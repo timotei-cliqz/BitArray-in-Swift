@@ -3,7 +3,7 @@
 //  BuildBloomFilteriOS
 //
 //  Created by Tim Palade on 3/14/17.
-//  Copyright © 2017 Tim Palade. All rights reserved.
+//  Copyright © 2017 Tim Palade. MIT License.
 //
 
 import Foundation
@@ -11,7 +11,9 @@ import Foundation
 final class BitArray: NSObject, NSCoding {
     
     //Array of bits manipulation
-    private var array: [UInt64] = []
+    typealias wordType = UInt64
+    
+    private var array: [wordType] = []
     
     init(count:Int) {
         super.init()
@@ -48,21 +50,21 @@ final class BitArray: NSObject, NSCoding {
     
     init?(coder aDecoder: NSCoder) {
         super.init()
-        let array:[UInt64] = aDecoder.decodeObject(forKey:"internalBitArray") as? [UInt64] ?? []
+        let array:[wordType] = aDecoder.decodeObject(forKey:"internalBitArray") as? [wordType] ?? []
         self.array = array
     }
     
     
     //Private API
     
-    private func valueOfBit(in array:[UInt64], at index:Int) -> Bool{
+    private func valueOfBit(in array:[wordType], at index:Int) -> Bool{
         checkIndexBound(index: index, lowerBound: 0, upperBound: array.count * intSize - 1)
         let (_arrayIndex, _bitIndex) = bitIndex(at:index)
         let bit = array[_arrayIndex]
         return valueOf(bit: bit, atIndex: _bitIndex)
     }
     
-    private func setValueOfBit(in array: inout[UInt64], at index:Int, value: Bool){
+    private func setValueOfBit(in array: inout[wordType], at index:Int, value: Bool){
         checkIndexBound(index: index, lowerBound: 0, upperBound: array.count * intSize - 1)
         let (_arrayIndex, _bitIndex) = bitIndex(at:index)
         let bit = array[_arrayIndex]
@@ -71,7 +73,7 @@ final class BitArray: NSObject, NSCoding {
     }
     
     //Constants
-    private let intSize = MemoryLayout<UInt64>.size * 8
+    private let intSize = MemoryLayout<wordType>.size * 8
     
     //bit masks
     
@@ -79,34 +81,34 @@ final class BitArray: NSObject, NSCoding {
         return intSize - 1 - index
     }
     
-    func mask(index:Int) -> UInt64 {
+    func mask(index:Int) -> wordType {
         checkIndexBound(index: index, lowerBound: 0, upperBound: intSize - 1)
-        return 1 << UInt64(invertedIndex(index: index))
+        return 1 << wordType(invertedIndex(index: index))
     }
     
-    func negative(index:Int) -> UInt64 {
+    func negative(index:Int) -> wordType {
         checkIndexBound(index: index, lowerBound: 0, upperBound: intSize - 1)
-        return ~(1 << UInt64(invertedIndex(index: index)))
+        return ~(1 << wordType(invertedIndex(index: index)))
     }
     
-    //return (arrayIndex for UInt64 containing the bit ,bitIndex inside the UInt64)
+    //return (arrayIndex for word containing the bit, bitIndex inside the word)
     private func bitIndex(at index:Int) -> (Int,Int){
         return(index / intSize, index % intSize)
     }
     
-    private func buildArray(count:Int) -> [UInt64] {
+    private func buildArray(count:Int) -> [wordType] {
         //words contain intSize bits each
         let numWords = count/intSize + 1
-        return Array.init(repeating: UInt64(0), count: numWords)
+        return Array.init(repeating: wordType(0), count: numWords)
     }
     
     //Bit manipulation
-    private func valueOf(bit: UInt64, atIndex index:Int) -> Bool {
+    private func valueOf(bit: wordType, atIndex index:Int) -> Bool {
         checkIndexBound(index: index, lowerBound: 0, upperBound: intSize - 1)
         return (bit & mask(index: index) != 0)
     }
     
-    private func setValueFor(bit: UInt64, value: Bool,atIndex index: Int) -> UInt64{
+    private func setValueFor(bit: wordType, value: Bool,atIndex index: Int) -> wordType{
         checkIndexBound(index: index, lowerBound: 0, upperBound: intSize - 1)
         if value {
             return (bit | mask(index: index))
