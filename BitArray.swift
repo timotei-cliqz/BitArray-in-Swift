@@ -3,7 +3,7 @@
 //  BuildBloomFilteriOS
 //
 //  Created by Tim Palade on 3/14/17.
-//  Copyright © 2017 Tim Palade. MIT License.
+//  MIT License.
 //
 
 import Foundation
